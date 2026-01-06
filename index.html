@@ -16,12 +16,64 @@
       margin: 0 auto;
       padding: 24px 16px;
     }
+
+    /* progress */
+    .progress {
+      height: 6px;
+      background: #fde68a;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #f59e0b, #fbbf24);
+      transition: width 0.3s ease;
+    }
+
     .card {
       background: #fff;
       border-radius: 20px;
-      padding: 24px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      overflow: hidden;
+      position: relative;
     }
+
+    .slide {
+      padding: 24px;
+      box-sizing: border-box;
+    }
+
+    /* animation */
+    .enter {
+      animation: slideIn 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    .exit {
+      animation: slideOut 0.25s ease forwards;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(48px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(-48px);
+        opacity: 0;
+      }
+    }
+
     .step {
       font-size: 14px;
       color: #888;
@@ -41,21 +93,11 @@
       border-radius: 16px;
       border: 2px solid #fde68a;
       background: linear-gradient(180deg, #fffbeb, #fef3c7);
-      transition: transform 0.06s ease, box-shadow 0.06s ease, background 0.06s ease;
-      touch-action: manipulation;
+      transition: transform 0.06s ease, box-shadow 0.06s ease;
     }
     .option:active {
       transform: scale(0.96);
       box-shadow: inset 0 4px 10px rgba(0,0,0,0.18);
-      background: #fde68a;
-    }
-    .option:hover {
-      background: #fef3c7;
-    }
-    .option:active {
-      transform: scale(0.97);
-      box-shadow: inset 0 2px 6px rgba(0,0,0,0.15);
-      background: #f1f5f9;
     }
     textarea {
       width: 100%;
@@ -64,7 +106,6 @@
       padding: 12px;
       border-radius: 10px;
       border: 1px solid #ddd;
-      box-sizing: border-box;
     }
     .next {
       margin-top: 20px;
@@ -77,128 +118,101 @@
       border-radius: 18px;
       font-weight: bold;
       transition: transform 0.06s ease, box-shadow 0.06s ease;
-      touch-action: manipulation;
     }
     .next:active {
       transform: scale(0.96);
       box-shadow: inset 0 5px 12px rgba(0,0,0,0.28);
     }
-    .next:active {
-      transform: scale(0.97);
-      box-shadow: inset 0 3px 8px rgba(0,0,0,0.25);
-      background: #1e40af;
-    }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="card" id="app"></div>
+    <div class="progress"><div class="progress-bar" id="progress"></div></div>
+    <div class="card" id="card"></div>
   </div>
 
   <script>
     const steps = [
-      {
-        q: "どこで当社を知りましたか？",
-        type: "options",
-        options: ["ポータル", "SNS・動画", "提携先案内", "紹介", "その他"]
-      },
-      {
-        q: "今日、見に行こうと思った理由は？",
-        type: "options",
-        options: ["写真・動画", "価格", "立地・間取り", "制度・提携", "なんとなく"]
-      },
-      {
-        q: "『これがあったから来た』という点は？",
-        type: "text"
-      },
-      {
-        q: "比較している物件はありますか？",
-        type: "options",
-        options: ["ある", "ない"]
-      },
-      {
-        q: "（成約／未成約）最終的な判断理由を一言で",
-        type: "text"
-      }
+      { q: "どこで当社を知りましたか？", type: "options", options: ["ポータル", "SNS・動画", "提携先案内", "紹介", "その他"] },
+      { q: "今日、見に行こうと思った理由は？", type: "options", options: ["写真・動画", "価格", "立地・間取り", "制度・提携", "なんとなく"] },
+      { q: "『これがあったから来た』という点は？", type: "text" },
+      { q: "比較している物件はありますか？", type: "options", options: ["ある", "ない"] },
+      { q: "（成約／未成約）最終的な判断理由を一言で", type: "text" }
     ];
 
     let current = 0;
     const answers = [];
-    const app = document.getElementById("app");
+    const card = document.getElementById('card');
+    const progress = document.getElementById('progress');
+
+    function updateProgress() {
+      progress.style.width = `${(current / steps.length) * 100}%`;
+    }
 
     function render() {
-      const step = steps[current];
+      updateProgress();
 
-      app.innerHTML = `
+      const step = steps[current];
+      const slide = document.createElement('div');
+      slide.className = 'slide enter';
+
+      slide.innerHTML = `
         <div class="step">${current + 1} / ${steps.length}</div>
         <div class="question">${step.q}</div>
       `;
 
-      if (step.type === "options") {
+      if (step.type === 'options') {
         step.options.forEach(opt => {
-          const btn = document.createElement("button");
-          btn.className = "option";
+          const btn = document.createElement('button');
+          btn.className = 'option';
           btn.textContent = opt;
           btn.onclick = () => {
-            if (navigator.vibrate) navigator.vibrate(10);
             answers[current] = opt;
             next();
           };
-          app.appendChild(btn);
+          slide.appendChild(btn);
         });
       }
 
-      if (step.type === "text") {
-        const textarea = document.createElement("textarea");
-        textarea.placeholder = "短くてOK。そのまま書いてください";
-        textarea.value = answers[current] || "";
-        app.appendChild(textarea);
+      if (step.type === 'text') {
+        const textarea = document.createElement('textarea');
+        textarea.value = answers[current] || '';
+        slide.appendChild(textarea);
 
-        const nextBtn = document.createElement("button");
-        nextBtn.className = "next";
-        nextBtn.textContent = "次へ";
-        nextBtn.onclick = () => {
-          if (navigator.vibrate) navigator.vibrate(10);
+        const btn = document.createElement('button');
+        btn.className = 'next';
+        btn.textContent = '次へ';
+        btn.onclick = () => {
           answers[current] = textarea.value;
           next();
         };
-        app.appendChild(nextBtn);
+        slide.appendChild(btn);
       }
+
+      card.innerHTML = '';
+      card.appendChild(slide);
     }
 
     function next() {
-      current++;
-      if (current < steps.length) {
-        render();
-      } else {
-        app.innerHTML = `
-          <div style="text-align:center;">
-            <div style="font-size:56px;">🎉</div>
-            <div class="question">入力完了</div>
-            <p style="font-size:16px; color:#555;">ご入力ありがとうございました。<br>内容を以下にまとめました。</p>
-          </div>
+      const currentSlide = card.firstChild;
+      currentSlide.classList.remove('enter');
+      currentSlide.classList.add('exit');
 
-          <div style="margin-top:24px; background:#f8fafc; padding:20px; border-radius:14px;">
-            <div style="font-weight:bold; margin-bottom:12px; font-size:15px;">今回のヒアリング結果</div>
-            <ul style="font-size:15px; padding-left:18px; color:#333; line-height:1.6;">
-              <li><strong>来場きっかけ：</strong>${answers[0] || "未入力"}</li>
-              <li><strong>来場理由：</strong>${answers[1] || "未入力"}</li>
-              <li><strong>決定打：</strong>${answers[2] || "未入力"}</li>
-              <li><strong>比較状況：</strong>${answers[3] || "未入力"}</li>
-              <li><strong>判断理由：</strong>${answers[4] || "未入力"}</li>
-            </ul>
-          </div>
-
-          <div style="margin-top:20px; text-align:center; font-size:13px; color:#888;">※営業・分析用途として社内で活用されます</div>
-
-          <button id="editBtn" style="margin-top:24px; width:100%; padding:14px; font-size:16px; border-radius:12px; border:1px solid #2563eb; background:#fff; color:#2563eb;">回答を編集する</button>
-        `;
-
-        document.getElementById("editBtn").onclick = () => {
-          current = 0;
+      setTimeout(() => {
+        current++;
+        if (current < steps.length) {
           render();
-        };
-      }
+        } else {
+          progress.style.width = '100%';
+          card.innerHTML = `
+            <div class="slide enter" style="text-align:center;">
+              <div style="font-size:56px;">🎉</div>
+              <div class="question">入力完了</div>
+              <p style="font-size:16px; color:#555;">ご入力ありがとうございました。</p>
+            </div>
+          `;
+        }
+      }, 250);
     }
 
     render();
