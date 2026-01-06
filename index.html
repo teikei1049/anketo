@@ -8,7 +8,8 @@
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
       margin: 0;
-      background: #f5f5f5;
+      background: linear-gradient(180deg, #fef3c7 0%, #f5f5f5 60%);
+      -webkit-tap-highlight-color: rgba(0,0,0,0);
     }
     .container {
       max-width: 480px;
@@ -17,9 +18,9 @@
     }
     .card {
       background: #fff;
-      border-radius: 16px;
+      border-radius: 20px;
       padding: 24px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
     }
     .step {
       font-size: 14px;
@@ -34,12 +35,27 @@
     .option {
       display: block;
       width: 100%;
-      padding: 14px;
-      margin-bottom: 10px;
-      font-size: 16px;
-      border-radius: 10px;
-      border: 1px solid #ddd;
-      background: #fff;
+      padding: 18px;
+      margin-bottom: 12px;
+      font-size: 17px;
+      border-radius: 16px;
+      border: 2px solid #fde68a;
+      background: linear-gradient(180deg, #fffbeb, #fef3c7);
+      transition: transform 0.06s ease, box-shadow 0.06s ease, background 0.06s ease;
+      touch-action: manipulation;
+    }
+    .option:active {
+      transform: scale(0.96);
+      box-shadow: inset 0 4px 10px rgba(0,0,0,0.18);
+      background: #fde68a;
+    }
+    .option:hover {
+      background: #fef3c7;
+    }
+    .option:active {
+      transform: scale(0.97);
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.15);
+      background: #f1f5f9;
     }
     textarea {
       width: 100%;
@@ -53,12 +69,24 @@
     .next {
       margin-top: 20px;
       width: 100%;
-      padding: 16px;
-      font-size: 18px;
-      background: #2563eb;
+      padding: 20px;
+      font-size: 19px;
+      background: linear-gradient(135deg, #f59e0b, #fbbf24);
       color: #fff;
       border: none;
-      border-radius: 12px;
+      border-radius: 18px;
+      font-weight: bold;
+      transition: transform 0.06s ease, box-shadow 0.06s ease;
+      touch-action: manipulation;
+    }
+    .next:active {
+      transform: scale(0.96);
+      box-shadow: inset 0 5px 12px rgba(0,0,0,0.28);
+    }
+    .next:active {
+      transform: scale(0.97);
+      box-shadow: inset 0 3px 8px rgba(0,0,0,0.25);
+      background: #1e40af;
     }
   </style>
 </head>
@@ -69,11 +97,29 @@
 
   <script>
     const steps = [
-      { q: "どこで当社を知りましたか？", type: "options", options: ["ポータル", "SNS・動画", "提携先案内", "紹介", "その他"] },
-      { q: "今日、見に行こうと思った理由は？", type: "options", options: ["写真・動画", "価格", "立地・間取り", "制度・提携", "なんとなく"] },
-      { q: "『これがあったから来た』という点は？", type: "text" },
-      { q: "比較している物件はありますか？", type: "options", options: ["ある", "ない"] },
-      { q: "（成約／未成約）最終的な判断理由を一言で", type: "text" }
+      {
+        q: "どこで当社を知りましたか？",
+        type: "options",
+        options: ["ポータル", "SNS・動画", "提携先案内", "紹介", "その他"]
+      },
+      {
+        q: "今日、見に行こうと思った理由は？",
+        type: "options",
+        options: ["写真・動画", "価格", "立地・間取り", "制度・提携", "なんとなく"]
+      },
+      {
+        q: "『これがあったから来た』という点は？",
+        type: "text"
+      },
+      {
+        q: "比較している物件はありますか？",
+        type: "options",
+        options: ["ある", "ない"]
+      },
+      {
+        q: "（成約／未成約）最終的な判断理由を一言で",
+        type: "text"
+      }
     ];
 
     let current = 0;
@@ -82,14 +128,22 @@
 
     function render() {
       const step = steps[current];
-      app.innerHTML = `<div class="step">${current + 1} / ${steps.length}</div><div class="question">${step.q}</div>`;
+
+      app.innerHTML = `
+        <div class="step">${current + 1} / ${steps.length}</div>
+        <div class="question">${step.q}</div>
+      `;
 
       if (step.type === "options") {
         step.options.forEach(opt => {
           const btn = document.createElement("button");
           btn.className = "option";
           btn.textContent = opt;
-          btn.onclick = () => { answers[current] = opt; next(); };
+          btn.onclick = () => {
+            if (navigator.vibrate) navigator.vibrate(10);
+            answers[current] = opt;
+            next();
+          };
           app.appendChild(btn);
         });
       }
@@ -103,7 +157,11 @@
         const nextBtn = document.createElement("button");
         nextBtn.className = "next";
         nextBtn.textContent = "次へ";
-        nextBtn.onclick = () => { answers[current] = textarea.value; next(); };
+        nextBtn.onclick = () => {
+          if (navigator.vibrate) navigator.vibrate(10);
+          answers[current] = textarea.value;
+          next();
+        };
         app.appendChild(nextBtn);
       }
     }
@@ -119,20 +177,30 @@
             <div class="question">入力完了</div>
             <p style="font-size:16px; color:#555;">ご入力ありがとうございました。<br>内容を以下にまとめました。</p>
           </div>
+
           <div style="margin-top:24px; background:#f8fafc; padding:20px; border-radius:14px;">
-            <ul>
-              <li>来場きっかけ：${answers[0] || "未入力"}</li>
-              <li>来場理由：${answers[1] || "未入力"}</li>
-              <li>決定打：${answers[2] || "未入力"}</li>
-              <li>比較状況：${answers[3] || "未入力"}</li>
-              <li>判断理由：${answers[4] || "未入力"}</li>
+            <div style="font-weight:bold; margin-bottom:12px; font-size:15px;">今回のヒアリング結果</div>
+            <ul style="font-size:15px; padding-left:18px; color:#333; line-height:1.6;">
+              <li><strong>来場きっかけ：</strong>${answers[0] || "未入力"}</li>
+              <li><strong>来場理由：</strong>${answers[1] || "未入力"}</li>
+              <li><strong>決定打：</strong>${answers[2] || "未入力"}</li>
+              <li><strong>比較状況：</strong>${answers[3] || "未入力"}</li>
+              <li><strong>判断理由：</strong>${answers[4] || "未入力"}</li>
             </ul>
           </div>
-          <button id="editBtn" style="margin-top:24px; width:100%;">回答を編集する</button>
+
+          <div style="margin-top:20px; text-align:center; font-size:13px; color:#888;">※営業・分析用途として社内で活用されます</div>
+
+          <button id="editBtn" style="margin-top:24px; width:100%; padding:14px; font-size:16px; border-radius:12px; border:1px solid #2563eb; background:#fff; color:#2563eb;">回答を編集する</button>
         `;
-        document.getElementById("editBtn").onclick = () => { current = 0; render(); };
+
+        document.getElementById("editBtn").onclick = () => {
+          current = 0;
+          render();
+        };
       }
     }
+
     render();
   </script>
 </body>
