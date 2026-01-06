@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>来場理由ヒアリング</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      margin: 0;
+      background: #f5f5f5;
+    }
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .step {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 8px;
+    }
+    .question {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 16px;
+    }
+    .option {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 10px;
+      font-size: 16px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      background: #fff;
+    }
+    textarea {
+      width: 100%;
+      height: 80px;
+      font-size: 16px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      box-sizing: border-box;
+    }
+    .next {
+      margin-top: 20px;
+      width: 100%;
+      padding: 16px;
+      font-size: 18px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card" id="app"></div>
+  </div>
+
+  <script>
+    const steps = [
+      { q: "どこで当社を知りましたか？", type: "options", options: ["ポータル", "SNS・動画", "提携先案内", "紹介", "その他"] },
+      { q: "今日、見に行こうと思った理由は？", type: "options", options: ["写真・動画", "価格", "立地・間取り", "制度・提携", "なんとなく"] },
+      { q: "『これがあったから来た』という点は？", type: "text" },
+      { q: "比較している物件はありますか？", type: "options", options: ["ある", "ない"] },
+      { q: "（成約／未成約）最終的な判断理由を一言で", type: "text" }
+    ];
+
+    let current = 0;
+    const answers = [];
+    const app = document.getElementById("app");
+
+    function render() {
+      const step = steps[current];
+      app.innerHTML = `<div class="step">${current + 1} / ${steps.length}</div><div class="question">${step.q}</div>`;
+
+      if (step.type === "options") {
+        step.options.forEach(opt => {
+          const btn = document.createElement("button");
+          btn.className = "option";
+          btn.textContent = opt;
+          btn.onclick = () => { answers[current] = opt; next(); };
+          app.appendChild(btn);
+        });
+      }
+
+      if (step.type === "text") {
+        const textarea = document.createElement("textarea");
+        textarea.placeholder = "短くてOK。そのまま書いてください";
+        textarea.value = answers[current] || "";
+        app.appendChild(textarea);
+
+        const nextBtn = document.createElement("button");
+        nextBtn.className = "next";
+        nextBtn.textContent = "次へ";
+        nextBtn.onclick = () => { answers[current] = textarea.value; next(); };
+        app.appendChild(nextBtn);
+      }
+    }
+
+    function next() {
+      current++;
+      if (current < steps.length) {
+        render();
+      } else {
+        app.innerHTML = `
+          <div style="text-align:center;">
+            <div style="font-size:56px;">🎉</div>
+            <div class="question">入力完了</div>
+            <p style="font-size:16px; color:#555;">ご入力ありがとうございました。<br>内容を以下にまとめました。</p>
+          </div>
+          <div style="margin-top:24px; background:#f8fafc; padding:20px; border-radius:14px;">
+            <ul>
+              <li>来場きっかけ：${answers[0] || "未入力"}</li>
+              <li>来場理由：${answers[1] || "未入力"}</li>
+              <li>決定打：${answers[2] || "未入力"}</li>
+              <li>比較状況：${answers[3] || "未入力"}</li>
+              <li>判断理由：${answers[4] || "未入力"}</li>
+            </ul>
+          </div>
+          <button id="editBtn" style="margin-top:24px; width:100%;">回答を編集する</button>
+        `;
+        document.getElementById("editBtn").onclick = () => { current = 0; render(); };
+      }
+    }
+    render();
+  </script>
+</body>
+</html>
